@@ -11,7 +11,16 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-def create_submit_sbatch(batch_name, case_id, case_path, exe, cfg, hours: int = 24):
+def create_submit_sbatch(
+    batch_name,
+    case_id,
+    case_path,
+    exe,
+    cfg,
+    dry_run,
+    smoke_test,
+    hours: int = 24,
+):
     sbatch_path = os.path.join(case_path, "submit.sbatch")
     with open(sbatch_path, "w") as f:
         f.write("#!/bin/bash\n")
@@ -24,19 +33,32 @@ def create_submit_sbatch(batch_name, case_id, case_path, exe, cfg, hours: int = 
         f.write("#SBATCH -oReport-%j.out\n")
         f.write("\n")
         f.write(f"cd {os.path.abspath(case_path)}\n")
-        f.write(f"srun --account=gts-gkennedy9-coda20 {exe} {cfg}\n")
+        if smoke_test:
+            f.write(f"srun --account=gts-gkennedy9-coda20 {exe} {cfg} --smoke\n")
+        else:
+            f.write(f"srun --account=gts-gkennedy9-coda20 {exe} {cfg}\n")
 
     cmd = ["sbatch", os.path.abspath(sbatch_path)]
-    logger.info("executing: " + " ".join(cmd))
-    subprocess.run(
-        input=cmd,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    if dry_run:
+        logger.info("dryrun: " + " ".join(cmd))
+    else:
+        logger.info("executing: " + " ".join(cmd))
+        subprocess.run(
+            input=cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
 
 
-def create_cases(sweep_json, exe_path, template_cfg_path, output_path):
+def create_cases(
+    sweep_json,
+    exe_path,
+    template_cfg_path,
+    output_path,
+    dry_run=False,
+    smoke_test=False,
+):
     with open(sweep_json, "r") as f:
         json_dict = json.load(f)
 
@@ -117,6 +139,16 @@ if __name__ == "__main__":
         type=str,
         help="path to the template config file",
     )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="generate folders, files and commands, but don't submit jobs",
+    )
+    p.add_argument(
+        "--smoke-test",
+        action="store_true",
+        help="perform smoke test with reduced-size problems",
+    )
     args = p.parse_args()
 
     os.makedirs(args.output_path, exist_ok=False)
@@ -132,5 +164,10 @@ if __name__ == "__main__":
     shutil.copy2(args.sweep_json_path, args.output_path)
 
     create_cases(
-        args.sweep_json_path, args.exe_path, args.template_cfg_path, args.output_path
+        args.sweep_json_path,
+        args.exe_path,
+        args.template_cfg_path,
+        args.output_path,
+        dry_run=args.dry_run,
+        smoke_test=args.smoke_test,
     )
