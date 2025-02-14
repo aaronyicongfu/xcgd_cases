@@ -162,6 +162,7 @@ if __name__ == "__main__":
     )
 
     shutil.copy2(args.sweep_json_path, args.output_path)
+    shutil.copy2(args.template_cfg_path, args.output_path)
 
     create_cases(
         args.sweep_json_path,
