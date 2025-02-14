@@ -24,13 +24,13 @@ def create_submit_sbatch(
     sbatch_path = os.path.join(case_path, "submit.sbatch")
     with open(sbatch_path, "w") as f:
         f.write("#!/bin/bash\n")
-        f.write(f"#SBATCH -J{batch_name}_{case_id}\n")
+        f.write(f"#SBATCH -J {batch_name}_{case_id}\n")
         f.write("#SBATCH --account=gts-gkennedy9-coda20\n")
         f.write("#SBATCH -N1 --ntasks-per-node=1\n")
         f.write("#SBATCH --mem-per-cpu=4G\n")
-        f.write(f"#SBATCH -t{hours}:00:00\n")
-        f.write("#SBATCH -qinferno\n")
-        f.write("#SBATCH -oReport-%j.out\n")
+        f.write(f"#SBATCH -t {hours}:00:00\n")
+        f.write("#SBATCH -q inferno\n")
+        f.write(f"#SBATCH -o {os.path.join(case_path,'Report-%j.out')}\n")
         f.write("\n")
         f.write(f"cd {os.path.abspath(case_path)}\n")
         if smoke_test:
@@ -44,7 +44,7 @@ def create_submit_sbatch(
     else:
         logger.info("executing: " + " ".join(cmd))
         subprocess.run(
-            input=cmd,
+            cmd,
             capture_output=True,
             text=True,
             check=True,
@@ -101,7 +101,9 @@ def create_cases(
 
         # Create sbatch
         batch_name = os.path.basename(output_path)
-        create_submit_sbatch(batch_name, case_id, case_path, exe, cfg)
+        create_submit_sbatch(
+            batch_name, case_id, case_path, exe, cfg, dry_run, smoke_test
+        )
 
 
 if __name__ == "__main__":
@@ -117,27 +119,25 @@ if __name__ == "__main__":
 
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument(
+        "template_cfg_path",
+        type=str,
+        help="path to the template config file",
+    )
+    p.add_argument(
+        "sweep_json_path",
+        type=str,
+        help="path to a json defining the sweep parameters",
+    )
+    p.add_argument(
         "output_path",
         type=str,
         help="path to a folder where we put all cases in this batch in",
-    )
-    p.add_argument(
-        "--sweep-json-path",
-        type=str,
-        help="path to a json defining the sweep parameters",
-        default="sweep.json",
     )
     p.add_argument(
         "--exe-path",
         default=os.path.join(default_asset_dir, "topo"),
         type=str,
         help="path to the executable",
-    )
-    p.add_argument(
-        "--template-cfg-path",
-        default=os.path.join(default_asset_dir, "topo.cfg"),
-        type=str,
-        help="path to the template config file",
     )
     p.add_argument(
         "--dry-run",

@@ -1,10 +1,5 @@
 {
-  "optimizer": "snopt",
+  "area_frac": [0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
   "stress_use_discrete_ks": true,
-  "area_frac": [0.3, 0.35, 0.4, 0.45, 0.5],
-  "stress_ksrho_init": 1.0,
-  "stress_ksrho_final": 20.0,
-  "stress_ksrho_increase_every": 2,
-  "stress_ksrho_increase_rate": 0.1,
-  "max_it": 1000
+  "Np_1d": 2
 }
