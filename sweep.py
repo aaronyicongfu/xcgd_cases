@@ -62,13 +62,49 @@ def create_cases(
     with open(sweep_json, "r") as f:
         json_dict = json.load(f)
 
-    const_params = {k: v for k, v in json_dict.items() if not isinstance(v, list)}
-    variable_params = {k: v for k, v in json_dict.items() if isinstance(v, list)}
-    keys = variable_params.keys()
-    values = variable_params.values()
-    cases_params = [
-        const_params | dict(zip(keys, combo)) for combo in itertools.product(*values)
+    if "__comment__" in json_dict:
+        del json_dict["__comment__"]
+
+    const_params = {}
+    variable_params = {}
+    grouped_params = {}
+
+    for k, v in json_dict.items():
+        if isinstance(v, list):
+            variable_params[k] = v
+        elif isinstance(v, dict):
+            grouped_params[k] = v
+            # Sanity check
+            nopts = len(next(iter(v.values())))
+            for kk, vv in v.items():
+                assert isinstance(
+                    vv, list
+                ), f"options in {k} should all be specified as lists"
+                assert (
+                    len(vv) == nopts
+                ), f"options lists in {k} should all have same length"
+
+        else:
+            const_params[k] = v
+
+    opt_names = list(variable_params.keys()) + list(
+        list(d.keys()) for d in grouped_params.values()
+    )
+    opt_vals = list(variable_params.values()) + [
+        [list(v) for v in zip(*d.values())] for d in grouped_params.values()
     ]
+
+    cases_params = []
+    for vals in itertools.product(*opt_vals):
+        opts_dict = const_params.copy()
+
+        for k, v in zip(opt_names, vals):
+            if isinstance(k, list):
+                for kk, vv in zip(k, v):
+                    opts_dict[kk] = vv
+            else:
+                opts_dict[k] = v
+        cases_params.append(opts_dict)
 
     df = pd.DataFrame(cases_params)
     options = list(df.columns)

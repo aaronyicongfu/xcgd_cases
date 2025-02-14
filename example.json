@@ -1,0 +1,14 @@
+{
+  "__comment__": "This is comment",
+  "area_frac": [0.25, 0.3],
+  "Np_1d": [2, 4],
+  "stress_use_discrete_ks": true,
+  "group1": {
+    "stress_ksrho_init": [1.0, 2.0],
+    "stress_ksrho_final": [10.0, 20.0]
+  },
+  "group2" : {
+    "foo": [3],
+    "bar": [30]
+  }
+}
