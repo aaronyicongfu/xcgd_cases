@@ -2,10 +2,14 @@ import pyvista as pv
 import os
 import argparse
 from glob import glob
+from tqdm import tqdm
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+pv.start_xvfb()
+pv.OFF_SCREEN = True
 
 
 def quad_vtk_to_png(vtk_path, png_path):
@@ -66,7 +70,7 @@ if __name__ == "__main__":
         key=lambda case_path: int(os.path.basename(case_path).split("_")[-1])
     )
 
-    for case_apath in case_apaths:
+    for case_apath in tqdm(case_apaths):
         results = glob(os.path.join(case_apath, "opt_*"))
         results = [d for d in results if os.path.isdir(d)]
         results.sort(
