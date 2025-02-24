@@ -83,10 +83,10 @@ if __name__ == "__main__":
             logger.warning(f"no result folder for case {case_apath}")
             continue
 
-        result_folder = results[0]
+        result_folder = results[-1]
         if len(results) > 1:
             logger.warning(
-                f" {case_apath} contains multiple result folders, using {result_folder}"
+                f" {case_apath} contains multiple result folders, using latest {result_folder}"
             )
 
         # Find the latest quad vtk

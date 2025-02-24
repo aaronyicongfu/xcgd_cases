@@ -1,0 +1,13 @@
+{
+  "__comment__": ["L-bracket volume constrained stress minimization,",
+                  "uses area_frac continuation and finite cell mesh"],
+  "Np_1d": 4,
+  "use_finite_cell_mesh" : true,
+  "max_it": 1500,
+  "stress_use_discrete_ks": [true, false],
+  "area_frac": [0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
+  "group_opt": {
+    "optimizer": ["snopt", "paropt", "paropt"],
+    "paropt_algorithm": ["mma", "mma", "tr"]
+  }
+}
