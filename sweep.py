@@ -19,7 +19,7 @@ def create_submit_sbatch(
     cfg,
     dry_run,
     smoke_test,
-    hours: int = 24,
+    hours: int,
 ):
     sbatch_path = os.path.join(case_path, "submit.sbatch")
     with open(sbatch_path, "w") as f:
@@ -58,6 +58,7 @@ def create_cases(
     output_path,
     dry_run=False,
     smoke_test=False,
+    hours=24,
 ):
     with open(sweep_json, "r") as f:
         json_dict = json.load(f)
@@ -138,7 +139,7 @@ def create_cases(
         # Create sbatch
         batch_name = os.path.basename(output_path)
         create_submit_sbatch(
-            batch_name, case_id, case_path, exe, cfg, dry_run, smoke_test
+            batch_name, case_id, case_path, exe, cfg, dry_run, smoke_test, hours
         )
 
 
@@ -185,6 +186,7 @@ if __name__ == "__main__":
         action="store_true",
         help="perform smoke test with reduced-size problems",
     )
+    p.add_argument("--hours", default=24, type=int, help="job time limit")
     args = p.parse_args()
 
     os.makedirs(args.output_path, exist_ok=False)
@@ -207,4 +209,5 @@ if __name__ == "__main__":
         args.output_path,
         dry_run=args.dry_run,
         smoke_test=args.smoke_test,
+        hours=args.hours,
     )
