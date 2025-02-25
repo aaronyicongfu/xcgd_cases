@@ -1,15 +1,16 @@
 {
   "__comment__": ["L-bracket volume constrained stress minimization,",
                   "uses area_frac continuation and multiple x0"],
-  "Np_1d": [2],
+  "Np_1d": 4,
+  "lbracket_load_top": true,
   "use_finite_cell_mesh" : true,
   "max_it": 3000,
   "stress_use_discrete_ks": [true, false],
   "group_area_continuation": {
-    "area_frac_init": [0.7],
-    "area_frac_final": [0.4],
-    "area_frac_decrease_every": [20],
-    "area_frac_decrease_rate": [0.01]
+    "area_frac_init": [0.6, 0.6],
+    "area_frac_final": [0.4, 0.35],
+    "area_frac_decrease_every": [20, 20],
+    "area_frac_decrease_rate": [0.01, 0.01]
   },
   "group_x0": {
     "init_topology_method": ["circles", "circles", "sinusoidal", "lbracket", "lbracket"],
@@ -24,8 +25,6 @@
     "init_topology_lbracket_nholes_1d" : [0, 0, 0, 10, 6],
     "init_topology_lbracket_r": [0.0, 0.0, 0.0, 0.03, 0.06]
   },
-  "group_opt": {
-    "optimizer": ["snopt", "paropt", "paropt"],
-    "paropt_algorithm": ["mma", "mma", "tr"]
-  }
+  "optimizer": "paropt",
+  "paropt_algorithm": "mma"
 }

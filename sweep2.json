@@ -1,0 +1,15 @@
+{
+  "max_it": 3000,
+  "Np_1d": [2, 4],
+  "lbracket_load_top": [false, true],
+  "group_area_continuation": {
+    "area_frac_init": [0.6, 0.6, 0.6, 0.6],
+    "area_frac_final": [0.4, 0.4, 0.45, 0.35],
+    "area_frac_decrease_every": [10, 20, 20, 20],
+    "area_frac_decrease_rate": [0.01, 0.01, 0.01, 0.01]
+  },
+  "group_opt": {
+    "optimizer": ["snopt", "paropt", "paropt"],
+    "paropt_algorithm": ["mma", "mma", "tr"]
+  }
+}
