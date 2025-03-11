@@ -108,17 +108,30 @@ if __name__ == "__main__":
         df_mma = pd.read_csv(mma_results_csv_path, index_col=0)
         df_cases = pd.read_csv(cases_csv_path, index_col=0)
         df = df_cases.merge(df_mma, how="left")
-        df["sweep_id"] = df["case_id"] // 8  # FIXME: get this magic number properly
-        df.to_csv("test.csv")
+        # FIXME: get this magic number properly
+        NUM_CASES_PER_SWEEP = 8
+        df["sweep_id"] = df["case_id"] // NUM_CASES_PER_SWEEP
+        df["h"] = 1.0 / df["nx"]
+
+        max_obj = 0.4
+        df = df[df["fobj"] < max_obj]
 
         fig, ax = plt.subplots(figsize=(6.4, 4.8), constrained_layout=True)
         for index, sub_df in df.groupby("sweep_id"):
-            ax.plot(sub_df["nx"], sub_df["fobj"], "-o", label=f"sweep {index + 1}")
+            ax.semilogx(
+                sub_df["h"],
+                sub_df["fobj"],
+                "-o",
+                label=f"sweep {index + 1}({NUM_CASES_PER_SWEEP - sub_df['h'].size} outliers)",
+            )
 
-        ax.set_xlabel("number of elements in x direction")
+        ax.set_xlabel("relative mesh size h")
         ax.set_ylabel("stress objective")
 
-        ax.set_ylim([0.15, 0.4])
+        # ax.invert_xaxis()
+
+        # ax.set_ylim([0.15, 0.4])
+        ax.grid(which="both")
         ax.legend()
 
         fig.savefig(os.path.join(batch_apath, "mesh_convergence.pdf"))
