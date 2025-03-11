@@ -4,9 +4,12 @@ import argparse
 from glob import glob
 from tqdm import tqdm
 import pandas as pd
+import matplotlib.pyplot as plt
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def parse_mma_history(mma_apath):
     num_iters = -1
@@ -29,17 +32,7 @@ def parse_mma_history(mma_apath):
     return num_iters, fobj
 
 
-if __name__ == "__main__":
-
-    p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p.add_argument(
-        "batch_path",
-        type=str,
-        help="path to a folder where we put all cases in this batch in",
-    )
-    args = p.parse_args()
-
-    batch_apath = os.path.abspath(args.batch_path)
+def collect_data(batch_apath):
     if not os.path.isdir(batch_apath):
         raise RuntimeError(f"batch folder {batch_apath} doesn't exist")
 
@@ -92,3 +85,40 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(df_data)
     df.to_csv(os.path.join(batch_apath, "mma_results.csv"))
+
+
+if __name__ == "__main__":
+
+    p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    p.add_argument(
+        "batch_path",
+        type=str,
+        help="path to a folder where we put all cases in this batch in",
+    )
+    args = p.parse_args()
+
+    batch_apath = os.path.abspath(args.batch_path)
+
+    mma_results_csv_path = os.path.join(batch_apath, "mma_results.csv")
+    cases_csv_path = os.path.join(batch_apath, "cases.csv")
+
+    if not os.path.exists(mma_results_csv_path):
+        collect_data(batch_apath)
+    else:
+        df_mma = pd.read_csv(mma_results_csv_path, index_col=0)
+        df_cases = pd.read_csv(cases_csv_path, index_col=0)
+        df = df_cases.merge(df_mma, how="left")
+        df["sweep_id"] = df["case_id"] // 8  # FIXME: get this magic number properly
+        df.to_csv("test.csv")
+
+        fig, ax = plt.subplots(figsize=(6.4, 4.8), constrained_layout=True)
+        for index, sub_df in df.groupby("sweep_id"):
+            ax.plot(sub_df["nx"], sub_df["fobj"], "-o", label=f"sweep {index + 1}")
+
+        ax.set_xlabel("number of elements in x direction")
+        ax.set_ylabel("stress objective")
+
+        ax.set_ylim([0.15, 0.4])
+        ax.legend()
+
+        fig.savefig(os.path.join(batch_apath, "mesh_convergence.pdf"))
