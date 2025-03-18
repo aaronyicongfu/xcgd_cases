@@ -104,34 +104,34 @@ if __name__ == "__main__":
 
     if not os.path.exists(mma_results_csv_path):
         collect_data(batch_apath)
-    else:
-        df_mma = pd.read_csv(mma_results_csv_path, index_col=0)
-        df_cases = pd.read_csv(cases_csv_path, index_col=0)
-        df = df_cases.merge(df_mma, how="left")
-        # FIXME: get this magic number properly
-        NUM_CASES_PER_SWEEP = 8
-        df["sweep_id"] = df["case_id"] // NUM_CASES_PER_SWEEP
-        df["h"] = 1.0 / df["nx"]
 
-        max_obj = 0.4
-        df = df[df["fobj"] < max_obj]
+    df_mma = pd.read_csv(mma_results_csv_path, index_col=0)
+    df_cases = pd.read_csv(cases_csv_path, index_col=0)
+    df = df_cases.merge(df_mma, how="left")
+    # FIXME: get this magic number properly
+    NUM_CASES_PER_SWEEP = 8
+    df["sweep_id"] = df["case_id"] // NUM_CASES_PER_SWEEP
+    df["h"] = 1.0 / df["nx"]
 
-        fig, ax = plt.subplots(figsize=(6.4, 4.8), constrained_layout=True)
-        for index, sub_df in df.groupby("sweep_id"):
-            ax.semilogx(
-                sub_df["h"],
-                sub_df["fobj"],
-                "-o",
-                label=f"sweep {index + 1}({NUM_CASES_PER_SWEEP - sub_df['h'].size} outliers)",
-            )
+    max_obj = 0.4
+    df = df[df["fobj"] < max_obj]
 
-        ax.set_xlabel("relative mesh size h")
-        ax.set_ylabel("stress objective")
+    fig, ax = plt.subplots(figsize=(6.4, 4.8), constrained_layout=True)
+    for index, sub_df in df.groupby("sweep_id"):
+        ax.semilogx(
+            sub_df["h"],
+            sub_df["fobj"],
+            "-o",
+            label=f"sweep {index + 1}({NUM_CASES_PER_SWEEP - sub_df['h'].size} outliers)",
+        )
 
-        # ax.invert_xaxis()
+    ax.set_xlabel("relative mesh size h")
+    ax.set_ylabel("stress objective")
 
-        # ax.set_ylim([0.15, 0.4])
-        ax.grid(which="both")
-        ax.legend()
+    # ax.invert_xaxis()
 
-        fig.savefig(os.path.join(batch_apath, "mesh_convergence.pdf"))
+    # ax.set_ylim([0.15, 0.4])
+    ax.grid(which="both")
+    ax.legend()
+
+    fig.savefig(os.path.join(batch_apath, "mesh_convergence.pdf"))
