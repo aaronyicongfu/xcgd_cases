@@ -4,12 +4,14 @@ import argparse
 from glob import glob
 from tqdm import tqdm
 import tarfile
+from sys import platform
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-# pv.start_xvfb()
+if platform != "darwin":
+    pv.start_xvfb()
 pv.OFF_SCREEN = True
 
 
