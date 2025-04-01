@@ -1,12 +1,14 @@
 {
-  "__comment__": "use cfg_templates/cantilever_comp.cfg",
+  "__comment__": "use cfg_templates/cantilever_comp2.cfg",
   "Np_1d": 2,
   "group_x0": {
     "init_topology_method": ["sinusoidal", "sinusoidal", "sinusoidal", "sinusoidal", "circles", "circles", "circles"],
     "init_topology_sine_period_x":  [3, 4, 5, 6, 0, 0, 0],
     "init_topology_sine_period_y":  [2, 2, 2, 2, 0, 0, 0],
     "init_topology_nholes_x": [0, 0, 0, 0, 6, 8, 10],
-    "init_topology_nholes_y": [0, 0, 0, 0, 4, 4, 4]
+    "init_topology_nholes_y": [0, 0, 0, 0, 4, 4, 4],
+    "area_frac_init": [0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7],
+    "area_frac_final": [0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7]
   },
   "group_h" : {
     "nx": [32, 64, 96, 128, 160, 192, 224, 256],

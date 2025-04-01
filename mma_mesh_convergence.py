@@ -95,6 +95,12 @@ if __name__ == "__main__":
         type=str,
         help="path to a folder where we put all cases in this batch in",
     )
+    p.add_argument(
+        "--max-obj",
+        default=0.4,
+        type=float,
+        help="a large enough upper bound that we use to filter out all outliers",
+    )
     args = p.parse_args()
 
     batch_apath = os.path.abspath(args.batch_path)
@@ -113,8 +119,7 @@ if __name__ == "__main__":
     df["sweep_id"] = df["case_id"] // NUM_CASES_PER_SWEEP
     df["h"] = 1.0 / df["nx"]
 
-    max_obj = 0.4
-    df = df[df["fobj"] < max_obj]
+    df = df[df["fobj"] < args.max_obj]
 
     fig, ax = plt.subplots(figsize=(6.4, 4.8), constrained_layout=True)
     for index, sub_df in df.groupby("sweep_id"):
@@ -125,8 +130,8 @@ if __name__ == "__main__":
             label=f"sweep {index + 1}({NUM_CASES_PER_SWEEP - sub_df['h'].size} outliers)",
         )
 
-    ax.set_xlabel("relative mesh size h")
-    ax.set_ylabel("stress objective")
+    ax.set_xlabel("mesh size h")
+    ax.set_ylabel("objective")
 
     # ax.invert_xaxis()
 
