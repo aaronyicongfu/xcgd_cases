@@ -187,8 +187,14 @@ def plot_progress_single_case(args):
     if not os.path.isdir(progress_png_dir):
         os.mkdir(progress_png_dir)
 
-    for i in tqdm(range(args.progress_num)):
-        j = i * args.progress_every
+    num = args.progress_num
+    step = args.progress_every
+    if num < 0:
+        num = len(vtk_apaths)
+        step = 1
+
+    for i in tqdm(range(num)):
+        j = i * step
         vtk_apath = vtk_apaths[j]
         vtk_name = os.path.splitext(os.path.basename(vtk_apath))[0]
         png_path = os.path.join(progress_png_dir, f"{case_name}_{vtk_name}.png")
@@ -213,7 +219,7 @@ if __name__ == "__main__":
     p.add_argument("--what", default="stress", choices=["stress", "design"])
     p.add_argument("--case", default=None, type=str)
     p.add_argument("--progress-every", type=int, default=20)
-    p.add_argument("--progress-num", type=int, default=20)
+    p.add_argument("--progress-num", type=int, default=-1)
     args = p.parse_args()
 
     if args.case is None:
