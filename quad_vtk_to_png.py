@@ -9,11 +9,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-pv.start_xvfb()
+# pv.start_xvfb()
 pv.OFF_SCREEN = True
 
 
-def quad_vtk_to_png(vtk_path, png_path):
+def stress_quad_vtk_to_png(vtk_path, png_path):
     # Load the VTK file
     mesh = pv.read(vtk_path)
 
@@ -39,6 +39,48 @@ def quad_vtk_to_png(vtk_path, png_path):
     plotter.view_xy()
 
     plotter.screenshot(png_path)
+
+
+def design_grid_vtk_to_png(vtk_path, png_path):
+    # Load the VTK file
+    mesh = pv.read(vtk_path)
+
+    # Apply IsoVolume filter on 'phi_blueprint'
+    filtered_mesh = mesh.extract_surface().clip_scalar(
+        scalars="phi_blueprint", value=-1e5, invert=False
+    )
+    filtered_mesh = filtered_mesh.clip_scalar(
+        scalars="phi_blueprint", value=0, invert=True
+    )
+
+    # Create a plotter
+    plotter = pv.Plotter(off_screen=True)
+    plotter.add_mesh(
+        filtered_mesh,
+        scalars="x",
+        cmap="coolwarm",
+        show_scalar_bar=True,
+        scalar_bar_args={
+            "outline": False,
+            "fmt": "%.4f",
+            "color": "black",
+            "position_x": 0.2,
+            "position_y": 0.02,
+            "title_font_size": 35,
+            "label_font_size": 35,
+            "font_family": "courier",
+        },
+    )
+
+    # Set up camera angle for better visualization
+    plotter.view_xy()
+    plotter.set_background("white")
+    plotter.window_size = [1920, 1080]
+    plotter.camera.zoom(1.7)
+
+    # Save the screenshot
+    plotter.screenshot(png_path)
+    plotter.close()
 
 
 def plot_all_final_designs(args):
@@ -82,17 +124,25 @@ def plot_all_final_designs(args):
             )
 
         # Find the latest quad vtk
-        quad_vtk_apaths = glob(os.path.join(case_apath, result_folder, "quad_*.vtk"))
-        quad_vtk_apaths.sort(
+        if args.what == "stress":
+            vtk_apaths = glob(os.path.join(case_apath, result_folder, "quad_*.vtk"))
+        else:
+            vtk_apaths = glob(os.path.join(case_apath, result_folder, "grid_*.vtk"))
+
+        vtk_apaths.sort(
             key=lambda vtk_path: int(
                 os.path.splitext(os.path.split(vtk_path)[1])[0].split("_")[1]
             )
         )
-        latest_quad_vtk_apaths = quad_vtk_apaths[-1]
-        vtk_name = os.path.splitext(os.path.basename(latest_quad_vtk_apaths))[0]
+        latest_vtk_apaths = vtk_apaths[-1]
+        vtk_name = os.path.splitext(os.path.basename(latest_vtk_apaths))[0]
         case_name = os.path.basename(case_apath)
         png_path = os.path.join(batch_apath, f"{case_name}_{vtk_name}.png")
-        quad_vtk_to_png(latest_quad_vtk_apaths, png_path)
+
+        if args.what == "stress":
+            stress_quad_vtk_to_png(latest_vtk_apaths, png_path)
+        else:
+            design_grid_vtk_to_png(latest_vtk_apaths, png_path)
 
 
 def plot_progress_single_case(args):
@@ -120,8 +170,12 @@ def plot_progress_single_case(args):
         )
 
     # Sort quad vtk
-    quad_vtk_apaths = glob(os.path.join(case_apath, result_folder, "quad_*.vtk"))
-    quad_vtk_apaths.sort(
+    if args.what == "stress":
+        vtk_apaths = glob(os.path.join(case_apath, result_folder, "quad_*.vtk"))
+    else:
+        vtk_apaths = glob(os.path.join(case_apath, result_folder, "grid_*.vtk"))
+
+    vtk_apaths.sort(
         key=lambda vtk_path: int(
             os.path.splitext(os.path.split(vtk_path)[1])[0].split("_")[1]
         )
@@ -133,10 +187,13 @@ def plot_progress_single_case(args):
 
     for i in tqdm(range(args.progress_num)):
         j = i * args.progress_every
-        vtk_apath = quad_vtk_apaths[j]
+        vtk_apath = vtk_apaths[j]
         vtk_name = os.path.splitext(os.path.basename(vtk_apath))[0]
         png_path = os.path.join(progress_png_dir, f"{case_name}_{vtk_name}.png")
-        quad_vtk_to_png(vtk_apath, png_path)
+        if args.what == "stress":
+            stress_quad_vtk_to_png(vtk_apath, png_path)
+        else:
+            design_grid_vtk_to_png(vtk_apath, png_path)
 
     logger.info(f"compressing {progress_png_dir}")
     with tarfile.open(f"{progress_png_dir}.tar", "w") as tar:
@@ -151,6 +208,7 @@ if __name__ == "__main__":
         type=str,
         help="path to a folder where we put all cases in this batch in",
     )
+    p.add_argument("--what", default="stress", choices=["stress", "design"])
     p.add_argument("--case", default=None, type=str)
     p.add_argument("--progress-every", type=int, default=20)
     p.add_argument("--progress-num", type=int, default=20)
