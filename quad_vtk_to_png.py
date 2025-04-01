@@ -128,14 +128,22 @@ def plot_all_final_designs(args):
         # Find the latest quad vtk
         if args.what == "stress":
             vtk_apaths = glob(os.path.join(case_apath, result_folder, "quad_*.vtk"))
-        else:
+        elif args.what == "design":
             vtk_apaths = glob(os.path.join(case_apath, result_folder, "grid_*.vtk"))
-
-        vtk_apaths.sort(
-            key=lambda vtk_path: int(
-                os.path.splitext(os.path.split(vtk_path)[1])[0].split("_")[1]
+        elif args.what == "initial":
+            vtk_apaths = glob(
+                os.path.join(case_apath, result_folder, "init_and_bounds.vtk")
             )
-        )
+        else:
+            assert False, "unreachable code reached"
+
+        if args.what != "initial":
+            vtk_apaths.sort(
+                key=lambda vtk_path: int(
+                    os.path.splitext(os.path.split(vtk_path)[1])[0].split("_")[1]
+                )
+            )
+
         latest_vtk_apaths = vtk_apaths[-1]
         vtk_name = os.path.splitext(os.path.basename(latest_vtk_apaths))[0]
         case_name = os.path.basename(case_apath)
@@ -216,7 +224,7 @@ if __name__ == "__main__":
         type=str,
         help="path to a folder where we put all cases in this batch in",
     )
-    p.add_argument("--what", default="stress", choices=["stress", "design"])
+    p.add_argument("--what", default="stress", choices=["stress", "design", "initial"])
     p.add_argument("--case", default=None, type=str)
     p.add_argument("--progress-every", type=int, default=20)
     p.add_argument("--progress-num", type=int, default=-1)
@@ -226,5 +234,9 @@ if __name__ == "__main__":
         logger.info("Plotting all final designs")
         plot_all_final_designs(args)
     else:
+        assert (
+            args.what != "initial"
+        ), "--what cannot be initial when --case is specified"
+
         logger.info(f"Plotting the optimization progress for case {args.case}")
         plot_progress_single_case(args)
