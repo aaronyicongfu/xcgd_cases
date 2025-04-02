@@ -1,0 +1,13 @@
+{
+  "__comment__": "use cfg_templates/cantilever_comp3.cfg",
+  "Np_1d": 2,
+  "cantilever_symmetric": false,
+  "group_x0": {
+    "init_topology_sine_period_x": [3, 4, 5, 6, 4, 5, 6, 7],
+    "init_topology_sine_period_y": [2, 2, 2, 2, 3, 3, 3, 3]
+  },
+  "group_h" : {
+    "nx": [30, 60, 90, 120, 150, 180, 210, 240],
+    "ny": [15, 30, 45, 60, 75, 90, 105, 120]
+  }
+}
