@@ -95,9 +95,16 @@ if __name__ == "__main__":
         type=str,
         help="path to a folder where we put all cases in this batch in",
     )
+    p.add_argument("num_cases_per_sweep", type=int)
     p.add_argument(
         "--max-obj",
-        default=0.4,
+        default=1e10,
+        type=float,
+        help="a large enough upper bound that we use to filter out all outliers",
+    )
+    p.add_argument(
+        "--min-obj",
+        default=0.0,
         type=float,
         help="a large enough upper bound that we use to filter out all outliers",
     )
@@ -115,11 +122,11 @@ if __name__ == "__main__":
     df_cases = pd.read_csv(cases_csv_path, index_col=0)
     df = df_cases.merge(df_mma, how="left")
     # FIXME: get this magic number properly
-    NUM_CASES_PER_SWEEP = 8
-    df["sweep_id"] = df["case_id"] // NUM_CASES_PER_SWEEP
+    df["sweep_id"] = df["case_id"] // args.num_cases_per_sweep
     df["h"] = 1.0 / df["nx"]
 
     df = df[df["fobj"] < args.max_obj]
+    df = df[df["fobj"] > args.min_obj]
 
     fig, ax = plt.subplots(figsize=(6.4, 4.8), constrained_layout=True)
     for index, sub_df in df.groupby("sweep_id"):
@@ -127,7 +134,7 @@ if __name__ == "__main__":
             sub_df["h"],
             sub_df["fobj"],
             "-o",
-            label=f"sweep {index + 1}({NUM_CASES_PER_SWEEP - sub_df['h'].size} outliers)",
+            label=f"sweep {index + 1}({args.num_cases_per_sweep - sub_df['h'].size} outliers)",
         )
 
     ax.set_xlabel("mesh size h")
