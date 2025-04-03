@@ -30,20 +30,33 @@ def stress_quad_vtk_to_png(vtk_path, png_path):
     point_cloud["VonMises"] = scalars
 
     # Create a plot
-    plotter = pv.Plotter(off_screen=True, window_size=[800, 800])
+    plotter = pv.Plotter(off_screen=True, window_size=[1080, 1080])
     plotter.add_mesh(
         point_cloud,
         scalars="VonMises",
         cmap="rainbow",
         render_points_as_spheres=True,
         point_size=10.0,
+        show_scalar_bar=True,
+        scalar_bar_args={
+            "outline": False,
+            "fmt": "%.4f",
+            "color": "black",
+            "position_x": 0.2,
+            "position_y": 0.02,
+            "title_font_size": 35,
+            "label_font_size": 35,
+            "font_family": "courier",
+        },
     )
     plotter.view_xy()
+    plotter.set_background("white")
+    plotter.camera.zoom(1.1)
 
     plotter.screenshot(png_path)
 
 
-def design_grid_vtk_to_png(vtk_path, png_path):
+def design_grid_vtk_to_png(problem, vtk_path, png_path):
     # Load the VTK file
     mesh = pv.read(vtk_path)
 
@@ -77,8 +90,11 @@ def design_grid_vtk_to_png(vtk_path, png_path):
     # Set up camera angle for better visualization
     plotter.view_xy()
     plotter.set_background("white")
-    plotter.window_size = [1920, 1080]
-    plotter.camera.zoom(1.7)
+    plotter.window_size = [1920, 1080] if problem == "cantilever" else [1080, 1080]
+    if problem == "cantilever":
+        plotter.camera.zoom(1.7)
+    else:
+        plotter.camera.zoom(1.1)
 
     # Save the screenshot
     plotter.screenshot(png_path)
@@ -152,7 +168,7 @@ def plot_all_final_designs(args):
         if args.what == "stress":
             stress_quad_vtk_to_png(latest_vtk_apaths, png_path)
         else:
-            design_grid_vtk_to_png(latest_vtk_apaths, png_path)
+            design_grid_vtk_to_png(args.problem, latest_vtk_apaths, png_path)
 
 
 def plot_progress_single_case(args):
@@ -224,6 +240,7 @@ if __name__ == "__main__":
         type=str,
         help="path to a folder where we put all cases in this batch in",
     )
+    p.add_argument("problem", choices=["cantilever", "lbracket"])
     p.add_argument("--what", default="stress", choices=["stress", "design", "initial"])
     p.add_argument("--case", default=None, type=str)
     p.add_argument("--progress-every", type=int, default=20)
